@@ -1,18 +1,18 @@
-name = "elliemakesmanygames/stacks"
-version = "0.1.0"
-description = "Stack implementation for LuaU using linked lists."
-repository = "https://github.com/blackingsplash/DataStruct.git"
-authors = ["elliemakesmanygames"]
-license = "MIT"
+name                            = "elliemakesmanygames/stacks"
+version                         = "0.1.0"
+description                     = "Stack implementation for LuaU using linked lists."
+repository                      = "https://github.com/blackingsplash/DataStruct.git"
+authors                         = ["elliemakesmanygames"]
+license                         = "MIT"
 
 [target]
-environment = "luau"
+environment                     = "luau"
 
 [indices]
-default = "https://github.com/pesde-pkg/index"
+default                         = "https://github.com/pesde-pkg/index"
 
 [wally_indices]
-default = "https://github.com/UpliftGames/wally-index"
+default                         = "https://github.com/UpliftGames/wally-index"
 
 [dependencies]
 t                               =  { wally = "osyrisrblx/t", version = "^3.1.1" }

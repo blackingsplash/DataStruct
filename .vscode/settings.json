@@ -1,0 +1,18 @@
+{
+    "python.REPL.enableREPLSmartSend": false,
+    "editor.autoClosingBrackets": "always",
+    "editor.suggest.showDeprecated": true,
+    "editor.fontSize": 13,
+    "[python]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+    },
+    "[go]": {
+        "editor.defaultFormatter": "golang.go"
+    },
+    "[rust]": {
+        "editor.defaultFormatter": "rust-lang.rust-analyzer"
+    },
+    "[luau]": {
+        "editor.defaultFormatter": "Kampfkarren.selene-vscode"
+    }
+}
