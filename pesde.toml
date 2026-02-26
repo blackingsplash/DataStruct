@@ -1,11 +1,15 @@
 name = "elliemakesmanygames/stacks"
 version = "0.1.0"
-description = "Stack implementation for LuaU using linked lists"
+description = "Stack implementation for LuaU using linked lists."
+repository = "https://github.com/blackingsplash/DataStruct.git"
 authors = ["elliemakesmanygames"]
 license = "MIT"
 
 [target]
 environment = "luau"
+
+[dependencies]
+t                               =  { wally = "osyrisrblx/t", version = "^3.1.1" }
 
 [indices]
 default = "https://github.com/pesde-pkg/index"
