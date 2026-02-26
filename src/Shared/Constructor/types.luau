@@ -29,4 +29,9 @@ export type SchematizedLinkedList<T> = {
 	__add: (t: { [string]: unknown }, v: SchematizedLinkedList<T>) -> SchematizedLinkedList<T>,
 }
 
+export type function joinedSchematizedList(t1: type, t2: type)
+	if not t1:is("table") or t2:is("table") then error("arguments expected to be of type table to join.") end
+	return types.unionof(t1,t2)
+end
+
 return {}
