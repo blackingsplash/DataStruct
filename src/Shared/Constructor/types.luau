@@ -12,7 +12,7 @@ export type LinkedList = {
 	new: (v: any) -> LinkedList,
 	push: (self: LinkedList, v: any) -> (),
 	pop: (self: LinkedList) -> any,
-	peek: (self: LinkedList) -> any,
+	peek: (self: LinkedList) -> Node<any>,
 
 	__add: (t: LinkedList, v: LinkedList) -> LinkedList,
 }
