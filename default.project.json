@@ -3,7 +3,10 @@
   "tree": {
     "$className": "DataModel",
     "ReplicatedStorage": {
-      "$path": "src/Shared"
+      "$path": "src/Shared",
+      "Packages": {
+        "$path": "roblox_packages"
+      }
     },
     "ServerScriptService": {
       "$path": "src/Server"

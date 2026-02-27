@@ -13,6 +13,6 @@
         "editor.defaultFormatter": "rust-lang.rust-analyzer"
     },
     "[luau]": {
-        "editor.defaultFormatter": "Kampfkarren.selene-vscode"
+        "editor.defaultFormatter": "JohnnyMorganz.stylua"
     }
 }
