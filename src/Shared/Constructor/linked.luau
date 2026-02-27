@@ -1,4 +1,3 @@
---!strict
 --!optimize 2
 local _types: {} = require("./types")
 local _config: { } = require("../Config/config")
@@ -16,6 +15,11 @@ methods.__add = function(t1: Constructor, t2: Constructor): Constructor
 
     t1.bottom.next = t2.top
     t1.bottom = t2.bottom
+    t1.height += t2.height
+
+    t2.top = nil
+    t2.bottom = nil
+    t2.height = 0
 
     return t1
 end
@@ -51,6 +55,10 @@ function methods:pop(): ConstructorNode<any>?
 
     if self.height == 0 then self.bottom = nil end
     return res
+end
+
+function methods:peek(): ConstructorNode<any>?
+    if self.height == 0 or not self.top then return nil else return self.top end
 end
 
 return methods :: Constructor
