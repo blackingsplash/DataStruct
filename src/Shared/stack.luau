@@ -6,7 +6,7 @@ local t = require("./Packages/t")
 
 export type ConstructorNode<K = any> = types_mod.Node<K>
 export type Constructor = types_mod.LinkedList
-export type GlobalConfig = {} --types_mod.keyof(global_conf.GlobalConfig)
+export type GlobalConfig = {}
 export type Stack = {
 	create: (v: any) -> Constructor,
 	push: (s: Constructor, v: any) -> (),
@@ -14,14 +14,17 @@ export type Stack = {
 	peek: (s: Constructor) -> ConstructorNode<>,
 }
 
-local function verifyConstructorConfig(): (boolean, string?) end
+local function verifyConstructorConfig(v: GlobalConfig): (boolean, string?)
+	if typeof(v) == nil then
+		return false, "GlobalConfig type expected, got nil"
+	end
+	return true
+end
 
 local function new(v: any, conf: GlobalConfig?): Constructor
-	if typeof(conf) ~= nil then
-		local succ: boolean, result: string = verifyConstructorConfig(conf)
-		if not succ then
-			error(result)
-		end
+	local succ: boolean, result: string = verifyConstructorConfig(conf)
+	if typeof(conf) ~= "nil" and not succ then
+		error(result)
 	end
 
 	local curr: ConstructorNode<> = node(v)
