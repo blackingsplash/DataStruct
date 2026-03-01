@@ -1,5 +1,5 @@
 --!optimize 2
-local types = require("./Constructor/types")
+local types_mod = require("./Constructor/types")
 
-type Unionized<T,K> = types.JoinedSchematizedLinkedList<T,K>
-export type SchematizedLinkedList<T> = types.SchematizedLinkedList<T>
+type Unionized<T, K> = types_mod.JoinedSchematizedLinkedList<T, K>
+export type SchematizedLinkedList<T> = types_mod.SchematizedLinkedList<T>

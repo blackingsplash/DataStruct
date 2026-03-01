@@ -1,44 +1,63 @@
 --!optimize 2
 local types_mod: {} = require("./Constructor/types")
 local global_conf: {} = require("./Config/config")
-local node: (v: any) -> ConstructorNode<> = require("./Constructor/node")
-local t = require("./Packages/t")
 
-export type ConstructorNode<K = any> = types_mod.Node<K>
-export type Constructor = types_mod.LinkedList
-export type GlobalConfig = {}
-export type Stack = {
+type AcceptedTypes = types_mod.AcceptedTypes
+type StackConfig = global_conf.GlobalConfig
+type ConstructorNode = types_mod.Node
+type Constructor = types_mod.LinkedList
+type Stack = {
 	create: (v: any) -> Constructor,
 	push: (s: Constructor, v: any) -> (),
 	pop: (s: Constructor) -> any,
-	peek: (s: Constructor) -> ConstructorNode<>,
+	peek: (s: Constructor) -> ConstructorNode,
 }
 
-local function verifyConstructorConfig(v: GlobalConfig): (boolean, string?)
+local node: (v: any) -> ConstructorNode = require("./Constructor/node")
+
+local function verifyInputType(v: AcceptedTypes) end
+
+local function verifyConstructorConfig(conf: StackConfig): (boolean, string?)
+	for k, v in conf do
+		if not global_conf[k] then
+			return false, `{k} key in config params is non-existent.`
+		end
+		if v ~= nil and typeof(v) ~= typeof(global_conf[k]) then
+			return false, `{typeof(global_conf[k])} expected, got {typeof(v)} for key: {k}`
+		end
+		v = v or global_conf[k]
+	end
 	return true
 end
 
-local function new(v: any, conf: GlobalConfig?): Constructor
-	local succ: boolean, result: string = verifyConstructorConfig(conf)
-	local curr: ConstructorNode<> = node(v)
+local function new(v: AcceptedTypes, conf: StackConfig?): Constructor
+	if conf then
+		local succ: boolean, result: string = verifyConstructorConfig(conf)
+		if not succ then
+			error(result)
+		end
+	end
+
+	conf = conf or global_conf
+	local curr: ConstructorNode = node(v)
 	return {
-		top = curr :: ConstructorNode<>,
-		bottom = curr :: ConstructorNode<>,
+		top = curr :: ConstructorNode,
+		bottom = curr :: ConstructorNode,
 		height = 0 :: number,
 		locked = false :: boolean,
-		config = if conf then conf else global_conf :: { [string]: number | string },
+		config = conf :: { [string]: number | string },
 	}
 end
 
 local function push(s: Constructor, v: any): ()
-	if not t.any(v) then
+	if v == nil then
 		error(`expected type notnil, got {typeof(v)}`)
 	end
 	if s.locked then
 		error("stack is already locked by another thread; push method is invalid.")
 	end
 
-	local curr: ConstructorNode<> = node(v)
+	local curr: ConstructorNode = node(v)
 	if s.height > 0 then
 		curr.next = s.top
 		s.top = curr
@@ -58,7 +77,7 @@ local function pop(s: Constructor): any
 	end
 
 	s.locked = true
-	local res: ConstructorNode<>? = s.top
+	local res: ConstructorNode? = s.top
 
 	s.top = s.top.next
 	res.next = nil
@@ -72,7 +91,7 @@ local function pop(s: Constructor): any
 	return res.data
 end
 
-local function peek(s: Constructor): ConstructorNode<>?
+local function peek(s: Constructor): ConstructorNode?
 	if s.height == 0 or not s.top then
 		return nil
 	elseif s.locked then
@@ -82,9 +101,29 @@ local function peek(s: Constructor): ConstructorNode<>?
 	end
 end
 
+local function clear(s: Constructor): ()
+	if s.locked then
+		error("stack is already locked by another thread; clear method is invalid.")
+	end
+
+	s.locked = true
+	while s.top.next do
+		local next_node = s.top.next
+		s.top.data = nil
+		s.top.next = nil
+		s.top = next_node
+	end
+
+	s.top = nil
+	s.bottom = nil
+	s.height = 0
+	s.locked = false
+end
+
 return {
 	create = new,
 	push = push,
 	pop = pop,
 	peek = peek,
+	clear = clear,
 } :: Stack

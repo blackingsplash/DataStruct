@@ -1,31 +1,34 @@
-export type Node<T> = {
-	create: (v: T) -> Node<T>,
-	data: T,
-	next: Node<T>?,
+export type Node = {
+	data: AcceptedTypes,
+	next: Node?,
 }
 
 export type LinkedList = {
-	top: Node<any>?,
-	bottom: Node<any>?,
+	top: Node?,
+	bottom: Node?,
 	height: number,
 	locked: boolean,
 
-	new: (v: any) -> LinkedList,
-	push: (self: LinkedList, v: any) -> (),
-	pop: (self: LinkedList) -> any,
-	peek: (self: LinkedList) -> Node<any>,
+	new: (v: AcceptedTypes) -> LinkedList,
+	push: (self: LinkedList, v: AcceptedTypes) -> (),
+	pop: (self: LinkedList) -> AcceptedTypes?,
+	peek: (self: LinkedList) -> Node?,
+	clear: (self: LinkedList) -> (),
 }
 
-export type SchematizedLinkedList<T> = {
-	top: Node<T>?,
-	bottom: Node<T>?,
+export type SchematizedLinkedList<T = AcceptedTypes> = {
+	top: Node?,
+	bottom: Node?,
 	height: number,
 
 	new: (v: T) -> SchematizedLinkedList<T>,
 	push: (self: SchematizedLinkedList<T>, v: T) -> (),
-	pop: (self: SchematizedLinkedList<T>) -> T,
-	peek: (self: SchematizedLinkedList<T>) -> T,
+	pop: (self: SchematizedLinkedList<T>) -> T?,
+	peek: (self: SchematizedLinkedList<T>) -> T?,
+	clear: (self: SchematizedLinkedList<T>) -> (),
 }
+
+export type AcceptedTypes = string | number | boolean | vector | buffer | thread
 
 export type function JoinedSchematizedLinkedList(t1: type, t2: type)
 	if not t1:is("table") or t2:is("table") then
