@@ -7,7 +7,7 @@ type AcceptedTypes = types_mod.AcceptedTypes
 type StackConfig = types_mod.GlobalConfig
 type LinkedList = types_mod.LinkedList
 type ConstructorNode = types_mod.Node
-type Constructor = types_mod.Stack
+type Constructor<T = AcceptedTypes> = types_mod.SchematizedStack
 
 local node = require("./Constructor/node")
 local valid_config = require("./validconfig")
@@ -28,19 +28,25 @@ local function new(v: AcceptedTypes, conf: StackConfig?): LinkedList
 		top = curr :: ConstructorNode,
 		bottom = curr :: ConstructorNode,
 		height = 0 :: number,
-		registeredTypes = typeof(v) :: string,
+		registeredType = typeof(v) :: string,
 		locked = false :: boolean,
 		isfrozen = false :: boolean,
 		config = conf :: StackConfig,
 	}
 end
 
-local function push(s: Constructor, v: any): ()
-	if typeof(table_find(s, type(v))) ~= "number" then
-		error(`expected a valid whitelisted datatype, got {typeof(v)}`)
+local function push(s: Constructor, v: AcceptedTypes): ()
+	if typeof(v) ~= s.registeredType then
+		error(`expected the same type as other data, got {typeof(v)}`)
 	end
 	if s.locked or s.isfrozen then
 		error("stack is already locked/frozen by another thread; push method is invalid.")
+	end
+	if s.height + 1 > s.maxNodeAmount then
+		error("max amount of nodes exceeded. try popping.")
+	end
+	if type(v) == "number" then
+		v = math.round(v * s.precision) / s.precision
 	end
 
 	local curr = node(v)
@@ -123,6 +129,17 @@ local function freeze(s: Constructor, deepFreeze: boolean?): ()
 	s.isfrozen = true
 end
 
+local function some(s: Constructor, p: (v: AcceptedTypes) -> boolean): boolean
+	local curr = s.top
+	while curr do
+		if p(curr.data) then
+			return true
+		end
+		curr = curr.next
+	end
+	return false
+end
+
 return {
 	create = new,
 	push = push,
@@ -130,4 +147,5 @@ return {
 	peek = peek,
 	clear = clear,
 	freeze = freeze,
+	some = some, -- credits to yoda for the idea, code is made by me though
 } :: Constructor

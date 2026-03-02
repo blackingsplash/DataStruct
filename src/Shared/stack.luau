@@ -40,7 +40,7 @@ local function new(v: AcceptedTypes, conf: StackConfig?): LinkedList
 	}
 end
 
-local function push(s: Constructor, v: any): ()
+local function push(s: Constructor, v: AcceptedTypes): ()
 	if typeof(table_find(s, type(v))) ~= "number" then
 		error(`expected a valid whitelisted datatype, got {typeof(v)}`)
 	end
@@ -50,7 +50,6 @@ local function push(s: Constructor, v: any): ()
 	if s.height + 1 > s.maxNodeAmount then
 		error("max amount of nodes exceeded. try popping.")
 	end
-
 	if type(v) == "number" then
 		v = math.round(v * s.precision) / s.precision
 	end
