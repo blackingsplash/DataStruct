@@ -147,5 +147,5 @@ return {
 	peek = peek,
 	clear = clear,
 	freeze = freeze,
-	some = some, -- credits to yoda for the idea, code is made by me though
+	some = some, -- credits to yoda's Magnus module for the idea, code is made by me though
 } :: Constructor
