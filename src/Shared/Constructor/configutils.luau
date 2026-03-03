@@ -5,35 +5,35 @@ type AcceptedTypes = types_mod.AcceptedTypes
 
 type ValidTypesLibrary = {
 	check: (v: string) -> boolean,
-	add: (v: AcceptedTypes) -> (),
-	remove: (v: AcceptedTypes) -> (),
 	treat: (v: { AcceptedTypes }) -> (boolean, string?),
+	calculateBytes: (v: any) -> number,
 }
 
-local ValidTypes: { AcceptedTypes } = { "string", "number", "boolean", "vector", "buffer", "table" }
-local table_find, table_remove, table_insert = table.find, table.remove, table.insert
+local Funcs: { [AcceptedTypes]: (v: unknown) -> number } = {
+	["string"] = function(v: string): number
+		return string.len(v)
+	end,
+	["boolean"] = function(v: boolean): number
+		return 1
+	end,
+	["number"] = function(v: number): number
+		return 8
+	end,
+	["vector"] = function(v: vector): number
+		return 12
+	end,
+	["table"] = function(v): number end,
+	["buffer"] = function(v: buffer): number
+		return buffer.len(v)
+	end,
+}
 
 local function check(v: string): boolean
-	if type(table.find(ValidTypes, v)) ~= "number" then
+	if not Funcs[v] then
 		return false
 	else
 		return true
 	end
-end
-
-local function add(v: AcceptedTypes): ()
-	if type(table_find(ValidTypes, v)) == "number" then
-		return
-	end
-	table_insert(ValidTypes, v)
-end
-
-local function remove(v: AcceptedTypes): ()
-	if type(table_find(ValidTypes, v)) ~= "number" then
-		return
-	end
-	local index: number = table_find(v)
-	table_remove(ValidTypes, index)
 end
 
 local function treat(v: { AcceptedTypes }): (boolean, string?)
@@ -50,9 +50,10 @@ local function treat(v: { AcceptedTypes }): (boolean, string?)
 	return true
 end
 
+local function calculateBytes(v: any): boolean end
+
 return {
 	check = check,
-	add = add,
-	remove = remove,
 	treat = treat,
+	calculateBytes = calculateBytes,
 } :: ValidTypesLibrary

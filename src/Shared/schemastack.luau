@@ -10,7 +10,7 @@ type ConstructorNode = types_mod.Node
 type Constructor<T = AcceptedTypes> = types_mod.SchematizedStack
 
 local node = require("./Constructor/node")
-local valid_config = require("./Constructor/configfuncs")
+local valid_config = require("./Constructor/configutils")
 
 local table_freeze = table.freeze
 
@@ -29,16 +29,18 @@ local function new(v: AcceptedTypes, conf: StackConfig?): LinkedList
 			error(result)
 		end
 	end
-
 	conf = conf or global_conf
+
 	local curr = node(v)
+	local nodeLimit, maxSizePerNode = conf["NodeLimit"], conf["MaxSizePerNode"]
 	return {
 		top = curr :: ConstructorNode,
 		height = 0 :: number,
+		maxNodeAmount = nodeLimit :: number,
+		maxByteSizePerNode = maxSizePerNode :: number,
 		registeredType = type(v) :: string?,
 		locked = false :: boolean,
 		isfrozen = false :: boolean,
-		config = conf :: StackConfig,
 	}
 end
 

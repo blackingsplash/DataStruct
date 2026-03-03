@@ -19,7 +19,6 @@ export type LinkedList = {
 	maxByteSizePerNode: number,
 	locked: boolean,
 	isfrozen: boolean,
-	config: GlobalConfig,
 }
 
 export type Stack = LinkedList & {
@@ -38,7 +37,6 @@ export type SchematizedLinkedList<T = AcceptedTypes> = {
 	maxByteSizePerNode: number,
 	registeredType: string?,
 	locked: boolean,
-	config: GlobalConfig,
 }
 
 export type SchematizedStack<T = AcceptedTypes> = SchematizedLinkedList<T> & {

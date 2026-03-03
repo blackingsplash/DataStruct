@@ -9,7 +9,7 @@ type ConstructorNode = types_mod.Node
 type Constructor = types_mod.Stack
 
 local node = require("./Constructor/node")
-local valid_config = require("./Constructor/configfuncs")
+local valid_config = require("./Constructor/configutils")
 
 local table_freeze = table.freeze
 local check, treat = valid_config.check, valid_config.treat
@@ -34,7 +34,6 @@ local function new(v: AcceptedTypes, conf: StackConfig?): LinkedList
 		maxByteSizePerNode = maxSizePerNode :: number,
 		locked = false :: boolean,
 		isfrozen = false :: boolean,
-		config = conf :: StackConfig,
 	}
 end
 
