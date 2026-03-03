@@ -11,8 +11,17 @@ local node = require("./Constructor/node")
 local valid_config = require("./Constructor/configutils")
 
 local table_freeze = table.freeze
-local check, treat = valid_config.check, valid_config.treat
+local check, treat, calculateBytes = valid_config.check, valid_config.treat, valid_config.calculateBytes
+--[=[
+    @function new
+    @within Stack
 
+    @param v -- the first value to push to the new stack. Cannot be nil. This will be the determinant of your other nodes.
+    @param configuration { "NodeLimit": number, "MaxByteSizePerNode": number } -- the configuration unique to this SchematizedStack.
+    @return LinkedList
+
+	@note The defaults of the configuration are respectively 50 nodes and 65535 bytes for the max node limit amount and max byte size per node.
+]=]
 local function new(v: unknown, conf: StackConfig?): LinkedList
 	if conf then
 		local succ: boolean, result: string = treat(conf)
@@ -24,22 +33,32 @@ local function new(v: unknown, conf: StackConfig?): LinkedList
 	conf = conf or global_conf
 
 	local curr = node(v)
-	local nodeLimit, maxSizePerNode = conf["NodeLimit"], conf["MaxByteSizePerNode"]
+	local nodeLimit, maxByteSizePerNode = conf["NodeLimit"], conf["MaxByteSizePerNode"]
+
+	if calculateBytes(v) > maxByteSizePerNode then
+		error(`{v} could not be added to stack; surpasses byte limit of {maxByteSizePerNode}`)
+	end
 
 	return {
 		top = curr :: ConstructorNode,
 		height = 1 :: number,
-
 		maxNodeAmount = nodeLimit :: number,
-		maxByteSizePerNode = maxSizePerNode :: number,
-
+		maxByteSizePerNode = maxByteSizePerNode :: number,
 		locked = false :: boolean,
 		isfrozen = false :: boolean,
 	}
 end
 
+--[=[
+    @function push
+    @within Stack
+
+    @param Stack -- the stack to push the node to
+    @param v -- the value that will be pushed. In a Stack, this value should be a whitelisted primitive value. O(1) operation.
+    @return ()
+]=]
 local function push(s: Constructor, v: unknown): ()
-	if check(type(v)) then
+	if not check(type(v)) then
 		error(`expected a valid primitive whitelisted datatype, got {typeof(v)}`)
 	end
 	if s.locked or s.isfrozen then
@@ -48,17 +67,29 @@ local function push(s: Constructor, v: unknown): ()
 	if s.height + 1 > s.maxNodeAmount then
 		error("max amount of nodes exceeded. try popping.")
 	end
+	if calculateBytes(v) > s.maxByteSizePerNode then
+		error(`{v} could not be added to stack; surpasses byte limit of {s.maxByteSizePerNode}`)
+	end
 
 	local curr = node(v)
+	print(curr)
 	if s.height > 0 then
-		curr.next = s.top
-		s.top = curr
+		s.top.next = curr
 	else
 		s.top = curr
 	end
 	s.height += 1
 end
 
+--[=[
+    @function pop
+    @within Stack
+
+    @param Stack -- the stack to pop the last node of. O(1) operation.
+    @return unknown -- the popped node's data.
+
+	@note If there are no nodes within the stack, it will return an error. If this method pops the last node, the registeredType of this stack will change.
+]=]
 local function pop(s: Constructor): unknown
 	if s.height == 0 or not s.top then
 		error("no nodes to pop in stack")
@@ -67,8 +98,9 @@ local function pop(s: Constructor): unknown
 		error("stack is already locked/frozen by another thread; pop method is invalid.")
 	end
 	if s.height == 1 then
+		local data = s.top.data
 		s.top = nil
-		return nil
+		return data
 	end
 
 	s.locked = true
@@ -82,6 +114,15 @@ local function pop(s: Constructor): unknown
 	return res.data
 end
 
+--[=[
+    @function peek
+    @within Stack
+
+    @param Stack -- the stack to peek the last node of. O(1) operation.
+    @return ()
+
+	@note If there are no nodes within the stack, it will return nil. 
+]=]
 local function peek(s: Constructor): ConstructorNode?
 	if s.height == 0 or not s.top then
 		return nil
@@ -92,28 +133,57 @@ local function peek(s: Constructor): ConstructorNode?
 	end
 end
 
+--[=[
+    @function deepClean
+    @within Stack
+
+    @param Stack -- the stack to deep clean the nodes of. O(n) operation.
+    @return ()
+
+	@note This method deletes all node links and data. It completely resets it. Will not work if it is frozen.
+]=]
 local function deepClean(s: Constructor): ()
 	if s.locked or s.isfrozen then
 		error("stack is already locked/frozen by another thread; clean method is invalid.")
 	end
-
 	s.locked = true
-	while s.top do
-		local next_node = s.top.next
-		s.top.data = nil
-		s.top.next = nil
-		s.top = next_node
+
+	local curr = s.top
+	while curr do
+		local next_node = curr.next
+		curr.data = nil
+		curr.next = nil
+		curr = next_node
 	end
 
-	s.top = nil
+	s.top = {}
 	s.height = 0
 	s.locked = false
 end
 
-local function freeze(s: Constructor, deepFreeze: boolean?): ()
-	deepFreeze = deepFreeze or false
-	local curr = s.top
+--[=[
+    @function freeze
+    @within Stack
 
+    @param Stack -- the stack to freeze
+    @param deepFreeze: boolean? -- Chooses if the freeze will be a shallow or a deep freeze. Defaults to false.
+    @return ()
+
+	@note A shallow freeze is O(1) and only freezes the last inputted node, and a deep freeze is O(n) and freezes all nodes.
+]=]
+local function freeze(s: Constructor, deepFreeze: boolean?): Constructor
+	if s.locked or s.isfrozen then
+		print(s.locked, s.isfrozen)
+		error("stack is already locked/frozen by another thread; freeze method is invalid.")
+	end
+	if s.height == 0 or not s.top then
+		error("no nodes to pop in stack in a deep freeze.")
+	end
+
+	s.locked = true
+	deepFreeze = deepFreeze or false
+
+	local curr = s.top
 	if deepFreeze then
 		while curr do
 			if typeof(curr.data) == "table" then
@@ -121,12 +191,25 @@ local function freeze(s: Constructor, deepFreeze: boolean?): ()
 			end
 			curr = curr.next
 		end
+	else
+		table_freeze(curr.data)
 	end
 
-	table_freeze(curr.data)
 	s.isfrozen = true
+	s.locked = false
+	return s
 end
 
+--[=[
+    @function some
+    @within Stack
+
+    @param Stack -- the stack to perform the predicate on each node. O(n) operation and Omega(1) operation.
+    @param predicate ((v: AcceptedTypes) -> boolean) -- the function that will be ran on each node, should return a boolean value. In a SchematizedStack, v should always be the same type as the other nodes or it will error.
+    @return boolean -- returns wether at least one of the keys passed the predicate
+
+    @note The parameter of the predicate function will be the same type as all the other node data. If there are no nodes within the stack, it will return nil.
+]=]
 local function some(s: Constructor, p: (v: unknown) -> boolean): boolean
 	if s.locked then
 		error("stack is already locked by another thread; some method is invalid.")
@@ -139,6 +222,7 @@ local function some(s: Constructor, p: (v: unknown) -> boolean): boolean
 	local curr = s.top
 	while curr do
 		if p(curr.data) then
+			s.locked = false
 			return true
 		end
 		curr = curr.next
@@ -153,7 +237,7 @@ return {
 	push = push,
 	pop = pop,
 	peek = peek,
-	clear = deepClean,
+	deepClean = deepClean,
 	freeze = freeze,
 	some = some,
 } :: Constructor

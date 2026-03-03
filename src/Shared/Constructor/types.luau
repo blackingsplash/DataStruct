@@ -23,12 +23,13 @@ export type LinkedList = {
 }
 
 export type Stack = LinkedList & {
-	new: (v: unknown) -> LinkedList,
+	create: (v: unknown, config: GlobalConfig?) -> LinkedList,
 	push: (self: LinkedList, v: unknown) -> (),
 	pop: (self: LinkedList) -> unknown,
 	peek: (self: LinkedList) -> Node?,
-	clear: (self: LinkedList) -> (),
-	freeze: (self: LinkedList, deepFreeze: unknown?) -> (),
+	deepClean: (self: LinkedList) -> (),
+	freeze: (self: LinkedList, deepFreeze: boolean?) -> LinkedList,
+	some: (self: LinkedList, predicate: (v: unknown) -> boolean) -> boolean,
 }
 
 export type SchematizedLinkedList<T> = {
@@ -42,11 +43,13 @@ export type SchematizedLinkedList<T> = {
 }
 
 export type SchematizedStack<T = unknown> = SchematizedLinkedList<T> & {
-	new: (v: T) -> SchematizedLinkedList<T>,
+	create: (v: T, config: GlobalConfig?) -> SchematizedLinkedList<T>,
 	push: (self: SchematizedLinkedList<T>, v: T) -> (),
 	pop: (self: SchematizedLinkedList<T>) -> T?,
 	peek: (self: SchematizedLinkedList<T>) -> T?,
-	clear: (self: SchematizedLinkedList<T>) -> (),
+	deepClean: (self: SchematizedLinkedList<T>) -> (),
+	freeze: (self: SchematizedLinkedList<T>, deepFreeze: boolean?) -> SchematizedLinkedList<T>,
+	some: (self: SchematizedLinkedList<T>, predicate: (v: T) -> boolean) -> boolean,
 }
 
 return {}

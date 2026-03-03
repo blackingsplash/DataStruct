@@ -12,18 +12,21 @@ local node = require("./Constructor/node")
 local valid_config = require("./Constructor/configutils")
 
 local table_freeze = table.freeze
+local treat, calculateBytes = valid_config.treat, valid_config.calculateBytes
 
 --[=[
-    @function push
-    @within Stack
+    @function new
+    @within SchematizedStack
 
     @param v -- the first value to push to the new stack. Cannot be nil. This will be the determinant of your other nodes.
-    @param conf -- the configuration unique to this SchematizedStack.
-    @return LinkedList
+    @param configuration { "NodeLimit": number, "MaxByteSizePerNode": number } -- the configuration unique to this SchematizedStack.
+    @return SchematizedLinkedList
+
+	@note The defaults of the configuration are respectively 50 nodes and 65535 bytes for the max node limit amount and max byte size per node.
 ]=]
-local function new(v: unknown, conf: StackConfig?): LinkedList
+local function create(v: unknown, conf: StackConfig?): LinkedList
 	if conf then
-		local succ: boolean, result: string = valid_config.treat(conf)
+		local succ: boolean, result: string = treat(conf)
 		if not succ then
 			error(result)
 		end
@@ -31,16 +34,18 @@ local function new(v: unknown, conf: StackConfig?): LinkedList
 	conf = conf or global_conf
 
 	local curr = node(v)
-	local nodeLimit, maxSizePerNode = conf["NodeLimit"], conf["MaxSizePerNode"]
+	local nodeLimit, maxByteSizePerNode = conf["NodeLimit"], conf["MaxByteSizePerNode"]
+
+	if calculateBytes(v) > maxByteSizePerNode then
+		error(`{v} could not be added to stack; surpasses byte limit of {maxByteSizePerNode}`)
+	end
+
 	return {
 		top = curr :: ConstructorNode,
-
-		height = 0 :: number,
+		height = 1 :: number,
 		maxNodeAmount = nodeLimit :: number,
-		maxByteSizePerNode = maxSizePerNode :: number,
-
+		maxByteSizePerNode = maxByteSizePerNode :: number,
 		registeredType = type(v) :: string?,
-
 		locked = false :: boolean,
 		isfrozen = false :: boolean,
 	}
@@ -48,10 +53,10 @@ end
 
 --[=[
     @function push
-    @within Stack
+    @within SchematizedStack
 
-    @param Stack -- the stack to push the node to
-    @param v -- the value that will be pushed. In a SchematizedStack, this should always be the same type as the other nodes or it will error.
+    @param SchematizedStack -- the stack to push the node to
+    @param v -- the value that will be pushed. In a SchematizedStack, this should a whitelisted primitive type and the same type as the other nodes or it will error.
     @return ()
 ]=]
 local function push(s: Constructor<>, v: unknown): ()
@@ -64,11 +69,13 @@ local function push(s: Constructor<>, v: unknown): ()
 	if s.height + 1 > s.maxNodeAmount then
 		error("max amount of nodes exceeded. try popping.")
 	end
+	if calculateBytes(v) > s.maxByteSizePerNode then
+		error(`{v} could not be added to stack; surpasses byte limit of {s.maxByteSizePerNode}`)
+	end
 
 	local curr = node(v)
 	if s.height > 0 then
-		curr.next = s.top
-		s.top = curr
+		s.top.next = curr
 	else
 		s.top = curr
 		s.registeredType = type(curr.data)
@@ -78,14 +85,14 @@ end
 
 --[=[
     @function pop
-    @within Stack
+    @within SchematizedStack
 
-    @param Stack -- the stack to pop the last node of. O(1) operation.
-    @return v -- the popped node's data.
+    @param SchematizedStack -- the stack to pop the last node of. O(1) operation.
+    @return unknown -- the popped node's data.
 
 	@note If there are no nodes within the stack, it will return an error. If this method pops the last node, the registeredType of this stack will change.
 ]=]
-local function pop(s: Constructor): unknown
+local function pop(s: Constructor<>): unknown
 	if s.height == 0 or not s.top then
 		error("no nodes to pop in stack")
 	end
@@ -111,14 +118,14 @@ end
 
 --[=[
     @function peek
-    @within Stack
+    @within SchematizedStack
 
-    @param Stack -- the stack to peek the last node of. O(1) operation.
+    @param SchematizedStack -- the stack to peek the last node of. O(1) operation.
     @return ()
 
 	@note If there are no nodes within the stack, it will return nil.
 ]=]
-local function peek(s: Constructor): ConstructorNode?
+local function peek(s: Constructor<>): ConstructorNode?
 	if s.locked then
 		error("stack is already locked by another thread; peek method is invalid.")
 	end
@@ -131,8 +138,6 @@ local function peek(s: Constructor): ConstructorNode?
 	if s.height == 0 or not s.top then
 		s.locked = false
 		return nil
-	elseif s.locked then
-		error("stack is already locked by another thread; peek method is invalid.")
 	else
 		s.locked = false
 		return s.top
@@ -140,47 +145,44 @@ local function peek(s: Constructor): ConstructorNode?
 end
 
 --[=[
-    @function clear
-    @within Stack
+    @function deepClean
+    @within SchematizedStack
 
-    @param Stack -- the stack to clear the nodes of.
+    @param SchematizedStack -- the stack to deep clean the nodes of. O(n) operation,
     @return ()
 
-	@note This method deletes all node links and data. It completely resets it. Will not work if it is frozen. O(n) operation at Omega(1).
+	@note This method deletes all node links and data. It completely resets it. Will not work if it is frozen.
 ]=]
-local function clear(s: Constructor): ()
+local function deepClean(s: Constructor<>): ()
 	if s.locked or s.isfrozen then
-		error("stack is already locked/frozen by another thread; clear method is invalid.")
+		error("stack is already locked/frozen by another thread; clean method is invalid.")
 	end
-	if s.height == 0 or not s.top then
-		return nil
-	end
-
 	s.locked = true
-	while s.top do
-		local next_node = s.top.next
-		s.top.data = nil
-		s.top.next = nil
-		s.top = next_node
+
+	local curr = s.top
+	while curr do
+		local next_node = curr.next
+		curr.data = nil
+		curr.next = nil
+		curr = next_node
 	end
 
-	s.top = nil
+	s.top = {}
 	s.height = 0
 	s.locked = false
-	return nil
 end
 
 --[=[
     @function freeze
-    @within Stack
+    @within SchematizedStack
 
-    @param Stack -- the stack to freeze
+    @param SchematizedStack -- the stack to freeze
     @param deepFreeze: boolean? -- Chooses if the freeze will be a shallow or a deep freeze. Defaults to false.
     @return ()
 
 	@note A shallow freeze is O(1) and a deep freeze is O(n). It will error if there are no nodes.
 ]=]
-local function freeze(s: Constructor, deepFreeze: boolean?): ()
+local function freeze(s: Constructor<>, deepFreeze: boolean?): Constructor<>
 	if s.locked or s.frozen then
 		error("stack is already locked/frozen by another thread; freeze method is invalid.")
 	end
@@ -204,13 +206,14 @@ local function freeze(s: Constructor, deepFreeze: boolean?): ()
 	table_freeze(curr.data)
 	s.isfrozen = true
 	s.locked = false
+	return s
 end
 
 --[=[
     @function some
-    @within Stack
+    @within SchematizedStack
 
-    @param Stack -- the stack to perform the predicate on each node
+    @param SchematizedStack -- the stack to perform the predicate on each node
     @param predicate ((v: AcceptedTypes) -> boolean) -- the function that will be ran on each node, should return a boolean value. In a SchematizedStack, v should always be the same type as the other nodes or it will error.
     @return boolean -- returns wether at least one of the keys passed the predicate
 
@@ -238,11 +241,11 @@ local function some(s: Constructor, p: (v: unknown) -> boolean): boolean
 end
 
 return {
-	create = new,
+	create = create,
 	push = push,
 	pop = pop,
 	peek = peek,
-	clear = clear,
+	deepClean = deepClean,
 	freeze = freeze,
 	some = some, -- credits to yoda's Magnus module for the idea, code is made by me though
 } :: Constructor
