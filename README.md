@@ -1,4 +1,4 @@
-(DO NOT USE FOR RECENT PROJECTS. THIS IS JUST A SUBMISSION OF MY SIMPLE CODE TO GET RANKED)
+(DO NOT USE FOR RECENT PROJECTS. THIS IS JUST A SUBMISSION OF MY SIMPLE CODE TO GET RANKED. THIS IS A BASIC WRAPPER AROUND TABLE.INSERT/TABLE.REMOVE)
 
 # StackLibrary
 **StackLibrary** is a simple library that implements the use of the Stack data structure in Roblox, focusing mainly on optimization and readable code that is easily modified by the developer. Its functionality 
@@ -7,8 +7,7 @@ have some weird edgecases, however, all the methods were tested and optimized.
 
 ## Features
 
--   **Stack and Schematized Stacks**: Aswell as normal stack data structures, StackLibrary comes with a Schematized Stack class that enforces a unique type of value, thus, when you create a Schematized Stack
-    with a number value, the rest values will be enforced to be of number values unless a deep clean occurs or a pop on the last node happens.
+-   **User custom configuration**: This feature allows users to customise how their stacks treat and operate nodes under the hood.
 -   **Thread safety**: StackLibrary comes with thread safety, which limits only one thread to work on your stack at a time. With this approach, strange collisions are completely avoided and data flow is free.
 ---
 
