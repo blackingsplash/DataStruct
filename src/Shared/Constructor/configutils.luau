@@ -29,10 +29,10 @@ local Funcs: { [AcceptedTypes]: (v: unknown) -> number } = {
 }
 
 local function check(v: string): boolean
-	if not Funcs[v] then
-		return false
-	else
+	if typeof(Funcs[v]) == "function" then
 		return true
+	else
+		return false
 	end
 end
 
