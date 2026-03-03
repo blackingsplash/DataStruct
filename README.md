@@ -21,11 +21,5 @@ Steps to download:
 # License
 
 <p align="center">
-Charm is released under the <a href="LICENSE.md">MIT License</a>.
+StackLibrary is released under the <a href="LICENSE.md">MIT License</a>.
 </p>
-
-<div align="center">
-
-[![MIT License](https://img.shields.io/github/license/littensy/charm?style=for-the-badge)]
-
-</div>
