@@ -1,12 +1,16 @@
-(DO NOT USE FOR RECENT PROJECTS. THIS IS JUST A SUBMISSION OF MY SIMPLE CODE TO GET RANKED. THIS IS A BASIC WRAPPER AROUND TABLE.INSERT/TABLE.REMOVE)
+**This module is not meant for any real work and should not be used; alternatives are table.insert() and table.remove(). This module is not maintained.**
 
 # StackLibrary
+[![Source on GitHub](https://img.shields.io/badge/Source-GitHub-6e40c9?style=for-the-badge&logo=github&logoColor=white)](https://github.com/blackingsplash/StackLibrary)
+[![Get it on Roblox](https://img.shields.io/badge/Get%20it%20on-Roblox-00A2FF?style=for-the-badge&logo=roblox&logoColor=white)](https://create.roblox.com/store/asset/81799640024168)
+
 **StackLibrary** is a simple library that implements the use of the Stack data structure in Roblox, focusing mainly on optimization and readable code that is easily modified by the developer. Its functionality 
 works well as it has thread safety, a frozen state (for .freeze), enforces a node limit and byte size limit on each node that can be customised, and more! This module is **still** just being published, so it may
 have some weird edgecases, however, all the methods were tested and optimized.
 
 ## Features
 
+-   **Linked list implementation**: Stack objects in StackLibrary are simulated through a linked list data structure.
 -   **User custom configuration**: This feature allows users to customise how their stacks treat and operate nodes under the hood.
 -   **Thread safety**: StackLibrary comes with thread safety, which limits only one thread to work on your stack at a time. With this approach, strange collisions are completely avoided and data flow is free.
 ---
