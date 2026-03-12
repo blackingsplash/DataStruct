@@ -1,4 +1,4 @@
-**This module is not meant for any real work and should not be used; alternatives are table.insert() and table.remove(). This module is not maintained.**
+**This module is not meant for any real work and should not be used; alternatives are table.insert() and table.remove(). This module is not maintained. This project is uniquely a parody project.**
 
 # StackLibrary
 [![Source on GitHub](https://img.shields.io/badge/Source-GitHub-6e40c9?style=for-the-badge&logo=github&logoColor=white)](https://github.com/blackingsplash/StackLibrary)
